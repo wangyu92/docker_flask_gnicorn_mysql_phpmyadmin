@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # --------------
+  # Flask - Devel
+  # --------------
+  flask_devel:
+    container_name: emoji_flask_devel
+    build: ./services/web
+    command: python manage.py run -h 0.0.0.0
+    restart: on-failure
+    volumes:
+      - ./services/web/:/usr/src/app/
+    ports:
+      - 8003:5000
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - db
+    networks:
+      - emojinet
+  
+  # --------------
+  # Flask - Prod
+  # --------------
+  flask_prod:
+    container_name: emoji_flask
+    build:
+      context: ./services/web
+      dockerfile: Dockerfile.prod
+    command: gunicorn -b 0.0.0.0:5000 manage:app
+    restart: on-failure
+    volumes:
+      - static_volume:/home/app/web/src/static
+      - media_volume:/home/app/web/src/media
+    expose:
+      - 5000
+    env_file:
+      - ./.env.prod
+    depends_on:
+      - db
+    networks:
+      - emojinet
+  
+  # --------------
+  # DB
+  # --------------
+  db:
+    container_name: emoji_db
+    image: mysql:8.0.32-debian
+    restart: on-failure
+    # ports:
+    #   - 3307:3306
+    expose:
+      - 3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: macbook1
+      MYSQL_DATABASE: main_db
+      TZ: Asia/Seoul
+    networks:
+      - emojinet
+
+  # --------------
+  # Nginx
+  # --------------
+  nginx:
+    container_name: emoji_nginx
+    build: ./services/nginx
+    restart: on-failure
+    volumes:
+      - static_volume:/home/app/web/project/static
+      - media_volume:/home/app/web/project/media
+    ports:
+      - 8002:80
+    depends_on:
+      - flask_prod
+    networks:
+      - emojinet
+
+  # --------------
+  # PhpMyAdmin
+  # --------------
+  phpmyadmin:
+    container_name: emoji_phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    restart: on-failure
+    ports:
+      - 8081:80
+    networks:
+      - emojinet
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: macbook1
+      PMA_ARBITRARY: 1
+
+volumes:
+  mysql_data:
+  static_volume:
+  media_volume:
+networks:
+  emojinet:
