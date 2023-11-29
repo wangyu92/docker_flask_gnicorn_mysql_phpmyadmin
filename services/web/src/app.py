@@ -1,8 +1,14 @@
 from flask import (
-    Flask, render_template, request, redirect, session, abort,
-    jsonify, send_from_directory)
+    Flask,
+    abort,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    session,
+)
 from sqlalchemy import create_engine
-
 
 app = Flask(__name__)
 app.config.from_object("src.config.Config")

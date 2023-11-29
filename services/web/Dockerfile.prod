@@ -41,8 +41,8 @@ RUN mkdir -p /home/app
 RUN addgroup --system app && adduser --system --group app
 
 # create the appropriate directories
-ENV HOME=/home/app
-ENV APP_HOME=/home/app/web
+ENV HOME=$HOME_DIR
+ENV APP_HOME=$HOME_DIR/web
 RUN mkdir $APP_HOME
 WORKDIR $APP_HOME
 
@@ -53,9 +53,6 @@ COPY --from=builder /usr/src/app/requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache /wheels/*
 
-# copy entrypoint-prod.sh
-COPY ./entrypoint.prod.sh $APP_HOME
-
 # copy project
 RUN rm -rf $APP_HOME
 COPY . $APP_HOME
@@ -65,6 +62,3 @@ RUN chown -R app:app $APP_HOME
 
 # change to the app user
 USER app
-
-# run entrypoint.prod.sh
-ENTRYPOINT ["/home/app/web/entrypoint.prod.sh"]
